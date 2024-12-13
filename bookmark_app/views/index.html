@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookmark Manager</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      width: 90%;
+      max-width: 1200px;
+      height: 90vh;
+      background-color: #fff;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .form-container {
+      flex: 1;
+      padding: 30px;
+      background-color: #f7fafc;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .form-group input:focus, .form-group textarea:focus {
+      border-color: #4A90E2;
+    }
+
+    .form-group button {
+      background-color: #4A90E2;
+      color: #fff;
+      padding: 10px;
+      width: 100%;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .form-group button:hover {
+      background-color: #357ABD;
+    }
+
+    .filter-group {
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .filter-group select {
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .bookmarks-container {
+      flex: 2;
+      background-color: #fff;
+      overflow-y: scroll;
+      padding: 20px;
+      position: relative;
+    }
+
+    .bookmarks-container h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .bookmark {
+      border-left: 5px solid #4A90E2;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      transition: transform 0.3s ease;
+    }
+
+    .bookmark:hover {
+      transform: translateY(-3px);
+    }
+
+    .bookmark h3 {
+      margin: 0;
+      color: #333;
+    }
+
+    .bookmark a {
+      color: #4A90E2;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 5px;
+      display: inline-block;
+    }
+
+    .bookmark a:hover {
+      text-decoration: underline;
+    }
+
+    .bookmark .view-image {
+      margin-top: 10px;
+      display: inline-block;
+      color: #f04a57;
+      text-decoration: underline;
+      font-size: 12px;
+    }
+
+    /* Hidden scrollbar */
+    .bookmarks-container::-webkit-scrollbar {
+      width: 0px;
+    }
+
+    .bookmarks-container {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Responsive layout */
+    @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .form-container, .bookmarks-container {
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Form Container -->
+    <div class="form-container">
+      <h2>Add a New Bookmark</h2>
+      <form action="/add" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" required>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category</label>
+          <input type="text" id="category" name="category" required>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="3" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="link">Website Link</label>
+          <input type="url" id="link" name="link" required>
+        </div>
+
+        <div class="form-group">
+          <label for="image">Upload Image</label>
+          <input type="file" id="image" name="image" accept="image/*">
+        </div>
+
+        <div class="form-group">
+          <button type="submit">Add Bookmark</button>
+        </div>
+      </form>
+
+      <!-- Category Filter Dropdown -->
+      <div class="filter-group">
+        <form id="filterForm" method="GET" action="/">
+          <select name="category" id="category" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            <% categories.forEach(category => { %>
+              <option value="<%= category.category %>" <%= selectedCategory === category.category ? 'selected' : '' %>>
+                <%= category.category %>
+              </option>
+            <% }) %>
+          </select>
+        </form>
+      </div>
+    </div>
+
+    <!-- Bookmarks Container (Right Side with Hidden Scroll) -->
+    <div class="bookmarks-container">
+      <h2>Your Bookmarks</h2>
+
+      <% if (bookmarks.length === 0) { %>
+        <p>No bookmarks found for this category!</p>
+      <% } else { %>
+        <% bookmarks.forEach(bookmark => { %>
+          <div class="bookmark">
+            <h3><%= bookmark.title %></h3>
+            <p><strong>Category:</strong> <%= bookmark.category %></p>
+            <p><strong>Description:</strong> <%= bookmark.description %></p>
+            <p><a href="<%= bookmark.link %>" target="_blank">Visit Website</a></p>
+            <% if (bookmark.image_filename) { %>
+              <a href="/uploads/<%= bookmark.image_filename %>" target="_blank" class="view-image">View Image</a>
+            <% } %>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+
+</body>
+</html>
